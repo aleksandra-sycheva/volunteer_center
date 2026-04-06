@@ -103,6 +103,7 @@ namespace volonteer_center
                 btnDelete.Visible = false;
                 btnRegistrationOfVolunteer.Visible = false;
                 btnCoordinatorStats.Visible = false;
+                btnUsersManagement.Visible = false;
             }
             else
             {
@@ -118,6 +119,7 @@ namespace volonteer_center
                     btnDelete.Visible = true;
                     btnRegistrationOfVolunteer.Visible = true;
                     btnCoordinatorStats.Visible = true;
+                    btnUsersManagement.Visible = true; // Только для администратора
                 }
                 else if (roleId == 2) // Координатор
                 {
@@ -126,6 +128,7 @@ namespace volonteer_center
                     btnDelete.Visible = false;
                     btnRegistrationOfVolunteer.Visible = true;
                     btnCoordinatorStats.Visible = false;
+                    btnUsersManagement.Visible = false;
                 }
                 else if (roleId == 3) // Волонтер
                 {
@@ -134,6 +137,7 @@ namespace volonteer_center
                     btnDelete.Visible = false;
                     btnRegistrationOfVolunteer.Visible = true;
                     btnCoordinatorStats.Visible = false;
+                    btnUsersManagement.Visible = false;
                 }
             }
         }
@@ -553,6 +557,14 @@ namespace volonteer_center
             {
                 MessageBox.Show($"Ошибка удаления: {ex.Message}", "Ошибка",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnUsersManagement_Click(object? sender, EventArgs e)
+        {
+            using (var formUsers = new FormUsersManagement(CurrentUser, IsGuest))
+            {
+                formUsers.ShowDialog();
             }
         }
     }

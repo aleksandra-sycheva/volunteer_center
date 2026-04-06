@@ -28,6 +28,7 @@
             lbUser = new Label();
             btnLogout = new Button();
             panelLeft = new Panel();
+            btnUsersManagement = new Button();
             btnCoordinatorStats = new Button();
             btnDelete = new Button();
             btnUpdate = new Button();
@@ -52,7 +53,7 @@
             paneltTop.Location = new Point(0, 0);
             paneltTop.Margin = new Padding(4, 3, 4, 3);
             paneltTop.Name = "paneltTop";
-            paneltTop.Size = new Size(1360, 150);
+            paneltTop.Size = new Size(1726, 150);
             paneltTop.TabIndex = 0;
             // 
             // panelSearch
@@ -175,7 +176,7 @@
             lbUser.Dock = DockStyle.Right;
             lbUser.Font = new Font("Times New Roman", 13.8F, FontStyle.Bold);
             lbUser.ForeColor = Color.FromArgb(76, 175, 80);
-            lbUser.Location = new Point(1068, 0);
+            lbUser.Location = new Point(1434, 0);
             lbUser.Margin = new Padding(4, 0, 4, 0);
             lbUser.Name = "lbUser";
             lbUser.Size = new Size(70, 25);
@@ -189,7 +190,7 @@
             btnLogout.FlatStyle = FlatStyle.Flat;
             btnLogout.Font = new Font("Times New Roman", 12F, FontStyle.Bold);
             btnLogout.ForeColor = Color.White;
-            btnLogout.Location = new Point(1138, 0);
+            btnLogout.Location = new Point(1504, 0);
             btnLogout.Margin = new Padding(4, 3, 4, 3);
             btnLogout.Name = "btnLogout";
             btnLogout.Size = new Size(222, 150);
@@ -200,6 +201,7 @@
             // panelLeft
             // 
             panelLeft.BackColor = Color.Honeydew;
+            panelLeft.Controls.Add(btnUsersManagement);
             panelLeft.Controls.Add(btnCoordinatorStats);
             panelLeft.Controls.Add(btnDelete);
             panelLeft.Controls.Add(btnUpdate);
@@ -212,6 +214,21 @@
             panelLeft.Size = new Size(260, 562);
             panelLeft.TabIndex = 1;
             // 
+            // btnUsersManagement
+            // 
+            btnUsersManagement.BackColor = Color.FromArgb(76, 175, 80);
+            btnUsersManagement.FlatStyle = FlatStyle.Flat;
+            btnUsersManagement.Font = new Font("Times New Roman", 12F, FontStyle.Bold);
+            btnUsersManagement.ForeColor = Color.White;
+            btnUsersManagement.Location = new Point(10, 360);
+            btnUsersManagement.Margin = new Padding(10);
+            btnUsersManagement.Name = "btnUsersManagement";
+            btnUsersManagement.Size = new Size(240, 59);
+            btnUsersManagement.TabIndex = 10;
+            btnUsersManagement.Text = "Управление пользователями";
+            btnUsersManagement.UseVisualStyleBackColor = false;
+            btnUsersManagement.Click += BtnUsersManagement_Click;
+            // 
             // btnCoordinatorStats
             // 
             btnCoordinatorStats.BackColor = Color.FromArgb(76, 175, 80);
@@ -223,8 +240,9 @@
             btnCoordinatorStats.Name = "btnCoordinatorStats";
             btnCoordinatorStats.Size = new Size(240, 59);
             btnCoordinatorStats.TabIndex = 9;
-            btnCoordinatorStats.Text = "Загрузка координатора";
+            btnCoordinatorStats.Text = "Статистика координаторов";
             btnCoordinatorStats.UseVisualStyleBackColor = false;
+            btnCoordinatorStats.Click += BtnCoordinatorStats_Click;
             // 
             // btnDelete
             // 
@@ -239,6 +257,7 @@
             btnDelete.TabIndex = 8;
             btnDelete.Text = "Удалить";
             btnDelete.UseVisualStyleBackColor = false;
+            btnDelete.Click += BtnDelete_Click;
             // 
             // btnUpdate
             // 
@@ -253,6 +272,7 @@
             btnUpdate.TabIndex = 7;
             btnUpdate.Text = "Редактировать";
             btnUpdate.UseVisualStyleBackColor = false;
+            btnUpdate.Click += BtnUpdate_Click;
             // 
             // btnCreate
             // 
@@ -267,6 +287,7 @@
             btnCreate.TabIndex = 6;
             btnCreate.Text = "Добавить";
             btnCreate.UseVisualStyleBackColor = false;
+            btnCreate.Click += BtnCreate_Click;
             // 
             // btnRegistrationOfVolunteer
             // 
@@ -281,6 +302,7 @@
             btnRegistrationOfVolunteer.TabIndex = 5;
             btnRegistrationOfVolunteer.Text = "Регистрация волонтеров";
             btnRegistrationOfVolunteer.UseVisualStyleBackColor = false;
+            btnRegistrationOfVolunteer.Click += BtnRegistrationOfVolunteer_Click;
             // 
             // dgvEvents
             // 
@@ -291,14 +313,14 @@
             dgvEvents.Margin = new Padding(4, 3, 4, 3);
             dgvEvents.Name = "dgvEvents";
             dgvEvents.RowHeadersWidth = 51;
-            dgvEvents.Size = new Size(1100, 562);
+            dgvEvents.Size = new Size(1466, 562);
             dgvEvents.TabIndex = 2;
             // 
             // FormEvents
             // 
             AutoScaleDimensions = new SizeF(11F, 22F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1360, 712);
+            ClientSize = new Size(1726, 712);
             Controls.Add(dgvEvents);
             Controls.Add(panelLeft);
             Controls.Add(paneltTop);
@@ -331,6 +353,7 @@
         private Label lbUser;
         private Button btnLogout;
         private Panel panelLeft;
+        private Button btnUsersManagement;
         private Button btnCoordinatorStats;
         private Button btnDelete;
         private Button btnUpdate;
