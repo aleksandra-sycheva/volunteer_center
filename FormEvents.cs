@@ -8,19 +8,23 @@ namespace volonteer_center
         public User CurrentUser { get; private set; }
         public bool IsGuest { get; private set; }
 
+        private List<Event> _allEvents;
+        private string _currentSearchText = "";
+        private int? _currentFilterStatusId = null;
+        private string _currentSortMode = "Все";
+
         public FormEvents(User user, bool guest)
         {
             InitializeComponent();
             CurrentUser = user;
             IsGuest = guest;
 
-            // Настройка DataGridView
             SetupDataGridViewColumns();
-
-            // Настройка видимости кнопок в зависимости от роли
             SetupRoleBasedVisibility();
+            LoadStatusFilter();
+            SetupSortVisibility();
 
-            // Подписка на события кнопок
+            // Подписка на события
             btnLogout.Click += BtnLogout_Click;
             btnRegistrationOfVolunteer.Click += BtnRegistrationOfVolunteer_Click;
             btnCreate.Click += BtnCreate_Click;
@@ -28,23 +32,72 @@ namespace volonteer_center
             btnDelete.Click += BtnDelete_Click;
             btnCoordinatorStats.Click += BtnCoordinatorStats_Click;
 
-            // Загрузка данных
             LoadEvents();
 
-            // Статистика для волонтера (автоматически при входе)
             if (!IsGuest && CurrentUser.RoleId == 3)
             {
                 ShowVolunteerStats(CurrentUser.Id);
             }
         }
 
+        private void SetupSortVisibility()
+        {
+            bool showSort = !IsGuest && (CurrentUser.RoleId == 1 || CurrentUser.RoleId == 2);
+            cmbSortCoordinator.Visible = showSort;
+            lblSort.Visible = showSort;
+
+            // Устанавливаем значение по умолчанию
+            if (showSort && cmbSortCoordinator.Items.Count > 0)
+            {
+                cmbSortCoordinator.SelectedIndex = 0;
+            }
+        }
+
+        private void LoadStatusFilter()
+        {
+            try
+            {
+                using (var db = new VolunteerCenterContext())
+                {
+                    var statuses = db.EventStatuses.ToList();
+
+                    // Очищаем ComboBox
+                    cmbFilterStatus.Items.Clear();
+
+                    // Создаем список для хранения элементов
+                    var items = new List<KeyValuePair<int?, string>>();
+
+                    // Добавляем пункт "Все статусы"
+                    items.Add(new KeyValuePair<int?, string>(null, "Все статусы"));
+
+                    // Добавляем все статусы из базы данных
+                    foreach (var status in statuses)
+                    {
+                        items.Add(new KeyValuePair<int?, string>(status.Id, status.StatusName));
+                    }
+
+                    // Привязываем данные к ComboBox
+                    cmbFilterStatus.DataSource = items;
+                    cmbFilterStatus.DisplayMember = "Value";
+                    cmbFilterStatus.ValueMember = "Key";
+
+                    // Выбираем первый пункт ("Все статусы")
+                    if (items.Count > 0)
+                        cmbFilterStatus.SelectedIndex = 0;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка загрузки статусов: {ex.Message}", "Ошибка",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
         private void SetupRoleBasedVisibility()
         {
-            // Отображение имени пользователя
             if (IsGuest)
             {
                 lbUser.Text = "Гость";
-                // Гость: только просмотр
                 btnCreate.Visible = false;
                 btnUpdate.Visible = false;
                 btnDelete.Visible = false;
@@ -58,8 +111,7 @@ namespace volonteer_center
 
                 int roleId = CurrentUser.RoleId;
 
-                // Администратор (RoleId = 1)
-                if (roleId == 1)
+                if (roleId == 1) // Администратор
                 {
                     btnCreate.Visible = true;
                     btnUpdate.Visible = true;
@@ -67,8 +119,7 @@ namespace volonteer_center
                     btnRegistrationOfVolunteer.Visible = true;
                     btnCoordinatorStats.Visible = true;
                 }
-                // Координатор (RoleId = 2)
-                else if (roleId == 2)
+                else if (roleId == 2) // Координатор
                 {
                     btnCreate.Visible = true;
                     btnUpdate.Visible = true;
@@ -76,8 +127,7 @@ namespace volonteer_center
                     btnRegistrationOfVolunteer.Visible = true;
                     btnCoordinatorStats.Visible = false;
                 }
-                // Волонтер (RoleId = 3)
-                else if (roleId == 3)
+                else if (roleId == 3) // Волонтер
                 {
                     btnCreate.Visible = false;
                     btnUpdate.Visible = false;
@@ -99,50 +149,47 @@ namespace volonteer_center
 
             dgvEvents.Columns.Clear();
 
-            // 1. Колонка с основной информацией
-            var colInfo = new DataGridViewTextBoxColumn();
-            colInfo.Name = "colInfo";
-            colInfo.HeaderText = "Информация о мероприятии";
-            colInfo.FillWeight = 50;
-            colInfo.DefaultCellStyle.WrapMode = DataGridViewTriState.True;
-
-            // 2. Колонка "Нужно волонтеров"
-            var colNeedVolunteer = new DataGridViewTextBoxColumn();
-            colNeedVolunteer.Name = "colNeedVolunteer";
-            colNeedVolunteer.HeaderText = "Нужно волонтеров";
-            colNeedVolunteer.FillWeight = 10;
-            colNeedVolunteer.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-
-            // 3. Колонка "Статус мероприятия"
-            var colStatus = new DataGridViewTextBoxColumn();
-            colStatus.Name = "colStatus";
-            colStatus.HeaderText = "Статус";
-            colStatus.FillWeight = 12;
-            colStatus.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-
-            // 4. Колонка "Свободные места"
-            var colAvailableSeats = new DataGridViewTextBoxColumn();
-            colAvailableSeats.Name = "colAvailableSeats";
-            colAvailableSeats.HeaderText = "Свободно мест";
-            colAvailableSeats.FillWeight = 10;
-            colAvailableSeats.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-
-            // 5. Колонка "Процент набора"
-            var colRecruitmentPercentage = new DataGridViewTextBoxColumn();
-            colRecruitmentPercentage.Name = "colRecruitmentPercentage";
-            colRecruitmentPercentage.HeaderText = "Набор %";
-            colRecruitmentPercentage.FillWeight = 8;
-            colRecruitmentPercentage.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-            colRecruitmentPercentage.DefaultCellStyle.Format = "F1";
-
-            dgvEvents.Columns.AddRange(new DataGridViewColumn[]
+            var colInfo = new DataGridViewTextBoxColumn
             {
-                colInfo,
-                colNeedVolunteer,
-                colStatus,
-                colAvailableSeats,
-                colRecruitmentPercentage
-            });
+                Name = "colInfo",
+                HeaderText = "Информация о мероприятии",
+                FillWeight = 50,
+                DefaultCellStyle = { WrapMode = DataGridViewTriState.True }
+            };
+
+            var colNeedVolunteer = new DataGridViewTextBoxColumn
+            {
+                Name = "colNeedVolunteer",
+                HeaderText = "Нужно волонтеров",
+                FillWeight = 10,
+                DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter }
+            };
+
+            var colStatus = new DataGridViewTextBoxColumn
+            {
+                Name = "colStatus",
+                HeaderText = "Статус",
+                FillWeight = 12,
+                DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter }
+            };
+
+            var colAvailableSeats = new DataGridViewTextBoxColumn
+            {
+                Name = "colAvailableSeats",
+                HeaderText = "Свободно мест",
+                FillWeight = 10,
+                DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter }
+            };
+
+            var colRecruitmentPercentage = new DataGridViewTextBoxColumn
+            {
+                Name = "colRecruitmentPercentage",
+                HeaderText = "Набор %",
+                FillWeight = 8,
+                DefaultCellStyle = { Alignment = DataGridViewContentAlignment.MiddleCenter, Format = "F1" }
+            };
+
+            dgvEvents.Columns.AddRange(colInfo, colNeedVolunteer, colStatus, colAvailableSeats, colRecruitmentPercentage);
         }
 
         private void LoadEvents()
@@ -151,7 +198,7 @@ namespace volonteer_center
             {
                 using (var db = new VolunteerCenterContext())
                 {
-                    var events = db.Events
+                    _allEvents = db.Events
                         .Include(e => e.Category)
                         .Include(e => e.Coordinator)
                         .Include(e => e.EventStatus)
@@ -159,45 +206,7 @@ namespace volonteer_center
                         .OrderBy(e => e.Date)
                         .ToList();
 
-                    dgvEvents.SuspendLayout();
-                    dgvEvents.Rows.Clear();
-
-                    foreach (var ev in events)
-                    {
-                        // Расчет подтвержденных волонтеров (статус 1 = Подтверждено)
-                        int confirmedCount = ev.RegistrationOfVolunteers
-                            .Count(r => r.RedistrationStatusId == 1);
-
-                        // Свободные места
-                        int freeSpots = ev.NeedVolonters - confirmedCount;
-                        freeSpots = freeSpots < 0 ? 0 : freeSpots;
-
-                        // Процент набора
-                        double fillPercent = ev.NeedVolonters > 0
-                            ? (double)confirmedCount / ev.NeedVolonters * 100
-                            : 0;
-
-                        // Форматирование информации
-                        string info = FormatEventInfo(ev);
-                        string status = ev.EventStatus?.StatusName ?? "Неизвестно";
-
-                        int rowIndex = dgvEvents.Rows.Add(
-                            info,
-                            ev.NeedVolonters,
-                            status,
-                            freeSpots,
-                            fillPercent
-                        );
-
-                        var row = dgvEvents.Rows[rowIndex];
-                        row.Tag = ev.Id;
-
-                        // Применение цветовой подсветки
-                        ApplyRowColor(row, ev, freeSpots);
-                    }
-
-                    dgvEvents.ResumeLayout();
-                    dgvEvents.AutoResizeRows(DataGridViewAutoSizeRowsMode.AllCells);
+                    ApplyFiltersAndSort();
                 }
             }
             catch (Exception ex)
@@ -207,22 +216,91 @@ namespace volonteer_center
             }
         }
 
+        private void ApplyFiltersAndSort()
+        {
+            if (_allEvents == null) return;
+
+            var filteredEvents = _allEvents.AsEnumerable();
+
+            // Фильтр по поиску
+            if (!string.IsNullOrWhiteSpace(_currentSearchText))
+            {
+                filteredEvents = filteredEvents.Where(e =>
+                    e.EventName.Contains(_currentSearchText, StringComparison.OrdinalIgnoreCase));
+            }
+
+            // Фильтр по статусу
+            if (_currentFilterStatusId.HasValue)
+            {
+                filteredEvents = filteredEvents.Where(e => e.EventStatusId == _currentFilterStatusId.Value);
+            }
+
+            // Сортировка
+            switch (_currentSortMode)
+            {
+                case "Мои мероприятия":
+                    if (CurrentUser.RoleId == 2)
+                        filteredEvents = filteredEvents.Where(e => e.CoordinatorId == CurrentUser.Id);
+                    filteredEvents = filteredEvents.OrderBy(e => e.Date);
+                    break;
+                case "По возрастанию":
+                    filteredEvents = filteredEvents.OrderBy(e => e.Coordinator?.LastName ?? "");
+                    break;
+                case "По убыванию":
+                    filteredEvents = filteredEvents.OrderByDescending(e => e.Coordinator?.LastName ?? "");
+                    break;
+                default:
+                    filteredEvents = filteredEvents.OrderBy(e => e.Date);
+                    break;
+            }
+
+            DisplayEvents(filteredEvents.ToList());
+        }
+
+        private void DisplayEvents(List<Event> events)
+        {
+            dgvEvents.SuspendLayout();
+            dgvEvents.Rows.Clear();
+
+            foreach (var ev in events)
+            {
+                int confirmedCount = ev.RegistrationOfVolunteers.Count(r => r.RedistrationStatusId == 1);
+                int freeSpots = Math.Max(0, ev.NeedVolonters - confirmedCount);
+                double fillPercent = ev.NeedVolonters > 0 ? (double)confirmedCount / ev.NeedVolonters * 100 : 0;
+                string info = FormatEventInfo(ev);
+                string status = ev.EventStatus?.StatusName ?? "Неизвестно";
+
+                int rowIndex = dgvEvents.Rows.Add(info, ev.NeedVolonters, status, freeSpots, fillPercent);
+                var row = dgvEvents.Rows[rowIndex];
+                row.Tag = ev.Id;
+                ApplyRowColor(row, ev, freeSpots);
+            }
+
+            dgvEvents.ResumeLayout();
+            dgvEvents.AutoResizeRows(DataGridViewAutoSizeRowsMode.AllCells);
+
+            // Обновляем заголовок с количеством записей
+            string userName = lbUser.Text.Split('(')[0].Trim();
+            if (events.Count != _allEvents?.Count)
+            {
+                lbUser.Text = $"{userName} (Найдено: {events.Count} из {_allEvents?.Count ?? 0})";
+            }
+            else
+            {
+                lbUser.Text = userName;
+            }
+        }
+
         private string FormatEventInfo(Event ev)
         {
             string coordinatorFullName = "Не назначен";
             if (ev.Coordinator != null)
             {
                 coordinatorFullName = $"{ev.Coordinator.LastName} {ev.Coordinator.FirstName} {ev.Coordinator.MiddleName}".Trim();
-                coordinatorFullName = string.IsNullOrWhiteSpace(coordinatorFullName)
-                    ? ev.Coordinator.Login
-                    : coordinatorFullName;
+                coordinatorFullName = string.IsNullOrWhiteSpace(coordinatorFullName) ? ev.Coordinator.Login : coordinatorFullName;
             }
 
-            return $"Название: {ev.EventName}\n" +
-                   $"Категория: {ev.Category?.CategoryName ?? "Без категории"}\n" +
-                   $"Дата: {ev.Date:dd.MM.yyyy}\n" +
-                   $"Место: {ev.Place}\n" +
-                   $"Координатор: {coordinatorFullName}";
+            return $"Название: {ev.EventName}\nКатегория: {ev.Category?.CategoryName ?? "Без категории"}\nДата: {ev.Date:dd.MM.yyyy}\nМесто: {ev.Place}\nКоординатор: {coordinatorFullName}";
         }
 
         private void ApplyRowColor(DataGridViewRow row, Event ev, int freeSpots)
@@ -230,29 +308,58 @@ namespace volonteer_center
             string status = ev.EventStatus?.StatusName ?? "";
 
             if (status == "Отменено")
-            {
                 row.DefaultCellStyle.BackColor = ColorTranslator.FromHtml("#FFB6C1");
-            }
             else if (status == "Завершено")
-            {
                 row.DefaultCellStyle.BackColor = ColorTranslator.FromHtml("#E0E0E0");
-            }
             else if (status == "Запланировано" && freeSpots < 3 && freeSpots > 0)
-            {
                 row.DefaultCellStyle.BackColor = ColorTranslator.FromHtml("#FFE5B4");
-            }
             else if (freeSpots <= 0 && status != "Завершено" && status != "Отменено")
-            {
                 row.DefaultCellStyle.BackColor = Color.LightGray;
+        }
+
+        private void TxtSearch_TextChanged(object? sender, EventArgs e)
+        {
+            _currentSearchText = txtSearch.Text;
+            ApplyFiltersAndSort();
+        }
+
+        private void CmbFilterStatus_SelectedIndexChanged(object? sender, EventArgs e)
+        {
+            if (cmbFilterStatus.SelectedItem != null)
+            {
+                var selected = (KeyValuePair<int?, string>)cmbFilterStatus.SelectedItem;
+                _currentFilterStatusId = selected.Key;
+                ApplyFiltersAndSort();
             }
+        }
+
+        private void CmbSortCoordinator_SelectedIndexChanged(object? sender, EventArgs e)
+        {
+            if (cmbSortCoordinator.SelectedItem != null)
+            {
+                _currentSortMode = cmbSortCoordinator.SelectedItem.ToString();
+                ApplyFiltersAndSort();
+            }
+        }
+
+        private void BtnClearFilters_Click(object? sender, EventArgs e)
+        {
+            txtSearch.Text = "";
+            if (cmbFilterStatus.Items.Count > 0)
+                cmbFilterStatus.SelectedIndex = 0;
+            if (cmbSortCoordinator.Items.Count > 0)
+                cmbSortCoordinator.SelectedIndex = 0;
+
+            _currentSearchText = "";
+            _currentFilterStatusId = null;
+            _currentSortMode = "Все";
+            ApplyFiltersAndSort();
+
+            MessageBox.Show("Все фильтры сброшены!", "Информация",
+                MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void BtnCoordinatorStats_Click(object? sender, EventArgs e)
-        {
-            LoadCoordinatorStats();
-        }
-
-        private void LoadCoordinatorStats()
         {
             try
             {
@@ -268,38 +375,27 @@ namespace volonteer_center
                         .OrderByDescending(s => s.EventsCount)
                         .ToList();
 
-                    // Формирование сообщения с простым форматированием
-                    string message = "==================================================\n";
+                    string message = "=======================================\n";
                     message += "          СТАТИСТИКА КООРДИНАТОРОВ           \n";
-                    message += "==================================================\n\n";
-
-                    // Заголовки
+                    message += "=======================================\n\n";
                     message += string.Format("{0,-40} {1,10}\n", "Координатор", "Мероприятий");
                     message += new string('-', 52) + "\n";
 
                     if (stats.Count == 0)
-                    {
                         message += "Нет назначенных координаторов.\n";
-                    }
                     else
                     {
                         foreach (var stat in stats)
                         {
-                            string name = string.IsNullOrWhiteSpace(stat.CoordinatorFullName)
-                                ? "Координатор без ФИО"
-                                : stat.CoordinatorFullName;
-
-                            // Ограничиваем длину имени 38 символами
-                            if (name.Length > 38)
-                                name = name.Substring(0, 35) + "...";
-
+                            string name = string.IsNullOrWhiteSpace(stat.CoordinatorFullName) ? "Координатор без ФИО" : stat.CoordinatorFullName;
+                            if (name.Length > 38) name = name.Substring(0, 35) + "...";
                             message += string.Format("{0,-40} {1,10}\n", name, stat.EventsCount);
                         }
                     }
 
                     message += new string('-', 52) + "\n";
                     message += string.Format("{0,-40} {1,10}\n", "Всего координаторов:", stats.Count);
-                    message += "==================================================";
+                    message += "=======================================";
 
                     MessageBox.Show(message, "Статистика координаторов",
                         MessageBoxButtons.OK, MessageBoxIcon.Information);
@@ -321,19 +417,17 @@ namespace volonteer_center
                     int completedEvents = db.RegistrationOfVolunteers
                         .Include(r => r.Event)
                         .ThenInclude(e => e.EventStatus)
-                        .Count(r => r.VolonteerId == volunteerId
-                                 && r.RedistrationStatusId == 1
-                                 && r.Event.EventStatus.StatusName == "Завершено");
+                        .Count(r => r.VolonteerId == volunteerId && r.RedistrationStatusId == 1 && r.Event.EventStatus.StatusName == "Завершено");
 
                     int totalEvents = db.RegistrationOfVolunteers
                         .Count(r => r.VolonteerId == volunteerId && r.RedistrationStatusId == 1);
 
-                    string message = "==================================================\n";
+                    string message = "=======================================\n";
                     message += "          ЛИЧНЫЙ КАБИНЕТ ВОЛОНТЕРА           \n";
-                    message += "==================================================\n\n";
+                    message += "=======================================\n\n";
                     message += string.Format("{0,-35} {1,10}\n", "Завершенных мероприятий:", completedEvents);
                     message += string.Format("{0,-35} {1,10}\n", "Всего участий:", totalEvents);
-                    message += "==================================================\n\n";
+                    message += "=======================================\n\n";
                     message += "     Спасибо за вашу активность и добрые дела! 🌟";
 
                     MessageBox.Show(message, "Личный кабинет волонтера",
@@ -347,42 +441,30 @@ namespace volonteer_center
             }
         }
 
-        private void RefreshEvents()
-        {
-            LoadEvents();
-        }
+        private void RefreshEvents() => LoadEvents();
 
         private void BtnLogout_Click(object? sender, EventArgs e)
         {
-            // Спрашиваем подтверждение
             var result = MessageBox.Show("Вы уверены, что хотите выйти из аккаунта?",
                 "Выход", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
             if (result == DialogResult.Yes)
             {
-                // Скрываем текущую форму
                 this.Hide();
-
-                // Создаем и показываем форму входа
                 using (var formLogin = new FormLogin())
                 {
                     var loginResult = formLogin.ShowDialog();
-
                     if (loginResult == DialogResult.OK)
                     {
-                        // Если пользователь успешно вошел, создаем новую FormEvents
                         var formEvents = new FormEvents(formLogin.CurrentUser, formLogin.IsGuest);
                         formEvents.ShowDialog();
                     }
                     else
                     {
-                        // Если пользователь закрыл форму входа, закрываем приложение
                         Application.Exit();
                         return;
                     }
                 }
-
-                // Закрываем текущую форму
                 this.Close();
             }
         }
@@ -396,7 +478,7 @@ namespace volonteer_center
                 return;
             }
 
-            if (dgvEvents.CurrentRow == null || dgvEvents.CurrentRow.Tag == null)
+            if (dgvEvents.CurrentRow?.Tag == null)
             {
                 MessageBox.Show("Выберите мероприятие!", "Внимание",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -404,13 +486,10 @@ namespace volonteer_center
             }
 
             int eventId = (int)dgvEvents.CurrentRow.Tag;
-
             using (var formReg = new FormRegistrationOfVolunteer(CurrentUser, IsGuest, eventId))
             {
                 if (formReg.ShowDialog() == DialogResult.OK)
-                {
                     RefreshEvents();
-                }
             }
         }
 
@@ -419,15 +498,13 @@ namespace volonteer_center
             using (var formEventEdit = new FormEventEdit(CurrentUser, IsGuest, null))
             {
                 if (formEventEdit.ShowDialog() == DialogResult.OK)
-                {
                     RefreshEvents();
-                }
             }
         }
 
         private void BtnUpdate_Click(object? sender, EventArgs e)
         {
-            if (dgvEvents.CurrentRow == null || dgvEvents.CurrentRow.Tag == null)
+            if (dgvEvents.CurrentRow?.Tag == null)
             {
                 MessageBox.Show("Выберите мероприятие для редактирования!", "Внимание",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -435,27 +512,23 @@ namespace volonteer_center
             }
 
             int eventId = (int)dgvEvents.CurrentRow.Tag;
-
             using (var formEventEdit = new FormEventEdit(CurrentUser, IsGuest, eventId))
             {
                 if (formEventEdit.ShowDialog() == DialogResult.OK)
-                {
                     RefreshEvents();
-                }
             }
         }
 
         private void BtnDelete_Click(object? sender, EventArgs e)
         {
-            if (dgvEvents.CurrentRow == null || dgvEvents.CurrentRow.Tag == null)
+            if (dgvEvents.CurrentRow?.Tag == null)
             {
                 MessageBox.Show("Выберите мероприятие для удаления!", "Внимание",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            var result = MessageBox.Show("Вы уверены, что хотите удалить это мероприятие?\n\n" +
-                "ВНИМАНИЕ: Все связанные регистрации будут также удалены!",
+            var result = MessageBox.Show("Вы уверены, что хотите удалить это мероприятие?\n\nВНИМАНИЕ: Все связанные регистрации будут также удалены!",
                 "Подтверждение удаления", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
 
             if (result != DialogResult.Yes) return;
@@ -463,19 +536,14 @@ namespace volonteer_center
             try
             {
                 int eventId = (int)dgvEvents.CurrentRow.Tag;
-
                 using (var db = new VolunteerCenterContext())
                 {
-                    var eventToDelete = db.Events
-                        .Include(e => e.RegistrationOfVolunteers)
-                        .FirstOrDefault(e => e.Id == eventId);
-
+                    var eventToDelete = db.Events.Include(e => e.RegistrationOfVolunteers).FirstOrDefault(e => e.Id == eventId);
                     if (eventToDelete != null)
                     {
                         db.Events.Remove(eventToDelete);
                         db.SaveChanges();
                         RefreshEvents();
-
                         MessageBox.Show("Мероприятие успешно удалено!", "Успех",
                             MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }

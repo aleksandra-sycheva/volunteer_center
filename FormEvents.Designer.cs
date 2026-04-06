@@ -16,19 +16,26 @@
         private void InitializeComponent()
         {
             paneltTop = new Panel();
+            panelSearch = new Panel();
+            btnClearFilters = new Button();
+            cmbSortCoordinator = new ComboBox();
+            lblSort = new Label();
+            cmbFilterStatus = new ComboBox();
+            lblFilter = new Label();
+            txtSearch = new TextBox();
+            lblSearch = new Label();
             pictureBox1 = new PictureBox();
             lbUser = new Label();
             btnLogout = new Button();
-            panel1 = new Panel();
             panelLeft = new Panel();
             btnCoordinatorStats = new Button();
             btnDelete = new Button();
             btnUpdate = new Button();
             btnCreate = new Button();
             btnRegistrationOfVolunteer = new Button();
-            npgsqlCommandBuilder1 = new Npgsql.NpgsqlCommandBuilder();
             dgvEvents = new DataGridView();
             paneltTop.SuspendLayout();
+            panelSearch.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).BeginInit();
             panelLeft.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dgvEvents).BeginInit();
@@ -37,20 +44,125 @@
             // paneltTop
             // 
             paneltTop.BackColor = Color.Honeydew;
+            paneltTop.Controls.Add(panelSearch);
             paneltTop.Controls.Add(pictureBox1);
             paneltTop.Controls.Add(lbUser);
             paneltTop.Controls.Add(btnLogout);
-            paneltTop.Controls.Add(panel1);
             paneltTop.Dock = DockStyle.Top;
             paneltTop.Location = new Point(0, 0);
+            paneltTop.Margin = new Padding(4, 3, 4, 3);
             paneltTop.Name = "paneltTop";
-            paneltTop.Size = new Size(1188, 112);
+            paneltTop.Size = new Size(1360, 150);
             paneltTop.TabIndex = 0;
+            // 
+            // panelSearch
+            // 
+            panelSearch.BackColor = Color.FromArgb(240, 248, 240);
+            panelSearch.BorderStyle = BorderStyle.FixedSingle;
+            panelSearch.Controls.Add(btnClearFilters);
+            panelSearch.Controls.Add(cmbSortCoordinator);
+            panelSearch.Controls.Add(lblSort);
+            panelSearch.Controls.Add(cmbFilterStatus);
+            panelSearch.Controls.Add(lblFilter);
+            panelSearch.Controls.Add(txtSearch);
+            panelSearch.Controls.Add(lblSearch);
+            panelSearch.Location = new Point(112, 5);
+            panelSearch.Margin = new Padding(4, 3, 4, 3);
+            panelSearch.Name = "panelSearch";
+            panelSearch.Size = new Size(868, 140);
+            panelSearch.TabIndex = 5;
+            // 
+            // btnClearFilters
+            // 
+            btnClearFilters.BackColor = Color.FromArgb(76, 175, 80);
+            btnClearFilters.FlatStyle = FlatStyle.Flat;
+            btnClearFilters.Font = new Font("Times New Roman", 10F, FontStyle.Bold);
+            btnClearFilters.ForeColor = Color.White;
+            btnClearFilters.Location = new Point(540, 80);
+            btnClearFilters.Margin = new Padding(4, 3, 4, 3);
+            btnClearFilters.Name = "btnClearFilters";
+            btnClearFilters.Size = new Size(200, 40);
+            btnClearFilters.TabIndex = 6;
+            btnClearFilters.Text = "Сбросить фильтры";
+            btnClearFilters.UseVisualStyleBackColor = false;
+            btnClearFilters.Click += BtnClearFilters_Click;
+            // 
+            // cmbSortCoordinator
+            // 
+            cmbSortCoordinator.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbSortCoordinator.Font = new Font("Times New Roman", 11F);
+            cmbSortCoordinator.FormattingEnabled = true;
+            cmbSortCoordinator.Items.AddRange(new object[] { "Все", "Мои мероприятия", "По возрастанию", "По убыванию" });
+            cmbSortCoordinator.Location = new Point(540, 40);
+            cmbSortCoordinator.Margin = new Padding(4, 3, 4, 3);
+            cmbSortCoordinator.Name = "cmbSortCoordinator";
+            cmbSortCoordinator.Size = new Size(200, 28);
+            cmbSortCoordinator.TabIndex = 5;
+            cmbSortCoordinator.SelectedIndexChanged += CmbSortCoordinator_SelectedIndexChanged;
+            // 
+            // lblSort
+            // 
+            lblSort.AutoSize = true;
+            lblSort.Font = new Font("Times New Roman", 11F, FontStyle.Bold);
+            lblSort.ForeColor = Color.FromArgb(46, 125, 50);
+            lblSort.Location = new Point(540, 15);
+            lblSort.Margin = new Padding(4, 0, 4, 0);
+            lblSort.Name = "lblSort";
+            lblSort.Size = new Size(272, 22);
+            lblSort.TabIndex = 4;
+            lblSort.Text = "Сортировка по координатору:";
+            // 
+            // cmbFilterStatus
+            // 
+            cmbFilterStatus.DropDownStyle = ComboBoxStyle.DropDownList;
+            cmbFilterStatus.Font = new Font("Times New Roman", 11F);
+            cmbFilterStatus.FormattingEnabled = true;
+            cmbFilterStatus.Location = new Point(10, 100);
+            cmbFilterStatus.Margin = new Padding(4, 3, 4, 3);
+            cmbFilterStatus.Name = "cmbFilterStatus";
+            cmbFilterStatus.Size = new Size(320, 28);
+            cmbFilterStatus.TabIndex = 3;
+            cmbFilterStatus.SelectedIndexChanged += CmbFilterStatus_SelectedIndexChanged;
+            // 
+            // lblFilter
+            // 
+            lblFilter.AutoSize = true;
+            lblFilter.Font = new Font("Times New Roman", 11F, FontStyle.Bold);
+            lblFilter.ForeColor = Color.FromArgb(46, 125, 50);
+            lblFilter.Location = new Point(10, 75);
+            lblFilter.Margin = new Padding(4, 0, 4, 0);
+            lblFilter.Name = "lblFilter";
+            lblFilter.Size = new Size(176, 22);
+            lblFilter.TabIndex = 2;
+            lblFilter.Text = "Фильтр по статусу:";
+            // 
+            // txtSearch
+            // 
+            txtSearch.Font = new Font("Times New Roman", 11F);
+            txtSearch.Location = new Point(10, 40);
+            txtSearch.Margin = new Padding(4, 3, 4, 3);
+            txtSearch.Name = "txtSearch";
+            txtSearch.Size = new Size(320, 29);
+            txtSearch.TabIndex = 1;
+            txtSearch.TextChanged += TxtSearch_TextChanged;
+            // 
+            // lblSearch
+            // 
+            lblSearch.AutoSize = true;
+            lblSearch.Font = new Font("Times New Roman", 11F, FontStyle.Bold);
+            lblSearch.ForeColor = Color.FromArgb(46, 125, 50);
+            lblSearch.Location = new Point(10, 15);
+            lblSearch.Margin = new Padding(4, 0, 4, 0);
+            lblSearch.Name = "lblSearch";
+            lblSearch.Size = new Size(187, 22);
+            lblSearch.TabIndex = 0;
+            lblSearch.Text = "Поиск по названию:";
             // 
             // pictureBox1
             // 
             pictureBox1.Image = Properties.Resources.логотип;
             pictureBox1.Location = new Point(3, 4);
+            pictureBox1.Margin = new Padding(4, 3, 4, 3);
             pictureBox1.Name = "pictureBox1";
             pictureBox1.Size = new Size(103, 103);
             pictureBox1.SizeMode = PictureBoxSizeMode.Zoom;
@@ -63,7 +175,8 @@
             lbUser.Dock = DockStyle.Right;
             lbUser.Font = new Font("Times New Roman", 13.8F, FontStyle.Bold);
             lbUser.ForeColor = Color.FromArgb(76, 175, 80);
-            lbUser.Location = new Point(921, 0);
+            lbUser.Location = new Point(1068, 0);
+            lbUser.Margin = new Padding(4, 0, 4, 0);
             lbUser.Name = "lbUser";
             lbUser.Size = new Size(70, 25);
             lbUser.TabIndex = 3;
@@ -76,19 +189,13 @@
             btnLogout.FlatStyle = FlatStyle.Flat;
             btnLogout.Font = new Font("Times New Roman", 12F, FontStyle.Bold);
             btnLogout.ForeColor = Color.White;
-            btnLogout.Location = new Point(991, 0);
+            btnLogout.Location = new Point(1138, 0);
+            btnLogout.Margin = new Padding(4, 3, 4, 3);
             btnLogout.Name = "btnLogout";
-            btnLogout.Size = new Size(197, 112);
+            btnLogout.Size = new Size(222, 150);
             btnLogout.TabIndex = 2;
             btnLogout.Text = "Выйти";
             btnLogout.UseVisualStyleBackColor = false;
-            // 
-            // panel1
-            // 
-            panel1.Location = new Point(1015, 110);
-            panel1.Name = "panel1";
-            panel1.Size = new Size(173, 603);
-            panel1.TabIndex = 1;
             // 
             // panelLeft
             // 
@@ -99,9 +206,10 @@
             panelLeft.Controls.Add(btnCreate);
             panelLeft.Controls.Add(btnRegistrationOfVolunteer);
             panelLeft.Dock = DockStyle.Left;
-            panelLeft.Location = new Point(0, 112);
+            panelLeft.Location = new Point(0, 150);
+            panelLeft.Margin = new Padding(4, 3, 4, 3);
             panelLeft.Name = "panelLeft";
-            panelLeft.Size = new Size(260, 600);
+            panelLeft.Size = new Size(260, 562);
             panelLeft.TabIndex = 1;
             // 
             // btnCoordinatorStats
@@ -174,27 +282,23 @@
             btnRegistrationOfVolunteer.Text = "Регистрация волонтеров";
             btnRegistrationOfVolunteer.UseVisualStyleBackColor = false;
             // 
-            // npgsqlCommandBuilder1
-            // 
-            npgsqlCommandBuilder1.QuotePrefix = "\"";
-            npgsqlCommandBuilder1.QuoteSuffix = "\"";
-            // 
             // dgvEvents
             // 
             dgvEvents.BackgroundColor = Color.White;
             dgvEvents.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgvEvents.Dock = DockStyle.Fill;
-            dgvEvents.Location = new Point(260, 112);
+            dgvEvents.Location = new Point(260, 150);
+            dgvEvents.Margin = new Padding(4, 3, 4, 3);
             dgvEvents.Name = "dgvEvents";
             dgvEvents.RowHeadersWidth = 51;
-            dgvEvents.Size = new Size(928, 600);
+            dgvEvents.Size = new Size(1100, 562);
             dgvEvents.TabIndex = 2;
             // 
             // FormEvents
             // 
             AutoScaleDimensions = new SizeF(11F, 22F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1188, 712);
+            ClientSize = new Size(1360, 712);
             Controls.Add(dgvEvents);
             Controls.Add(panelLeft);
             Controls.Add(paneltTop);
@@ -205,25 +309,33 @@
             Text = "События";
             paneltTop.ResumeLayout(false);
             paneltTop.PerformLayout();
+            panelSearch.ResumeLayout(false);
+            panelSearch.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)pictureBox1).EndInit();
             panelLeft.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)dgvEvents).EndInit();
             ResumeLayout(false);
         }
 
-
+        // Компоненты формы
         private Panel paneltTop;
+        private Panel panelSearch;
+        private Button btnClearFilters;
+        private ComboBox cmbSortCoordinator;
+        private Label lblSort;
+        private ComboBox cmbFilterStatus;
+        private Label lblFilter;
+        private TextBox txtSearch;
+        private Label lblSearch;
+        private PictureBox pictureBox1;
         private Label lbUser;
         private Button btnLogout;
-        private Panel panel1;
         private Panel panelLeft;
-        private PictureBox pictureBox1;
-        private Npgsql.NpgsqlCommandBuilder npgsqlCommandBuilder1;
+        private Button btnCoordinatorStats;
         private Button btnDelete;
         private Button btnUpdate;
         private Button btnCreate;
         private Button btnRegistrationOfVolunteer;
         private DataGridView dgvEvents;
-        private Button btnCoordinatorStats;
     }
 }
